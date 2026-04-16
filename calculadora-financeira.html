@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>À Vista ou Parcelado?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0e14;--surface:#13161f;--surface2:#1a1e2a;--surface3:#1f2435;
+  --border:#252a3a;--border2:#2e3448;
+  --accent:#c8f03c;--accent2:#3cf0a0;--danger:#f05c5c;--warn:#f0b43c;--info:#6090f0;
+  --text:#dfe3f0;--muted:#6b738f;--muted2:#8890a8;
+  --radius:18px;--font:'Sora',sans-serif;--mono:'DM Mono',monospace;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100dvh;-webkit-font-smoothing:antialiased}
+.app{max-width:430px;margin:0 auto;padding-bottom:80px}
+
+/* HEADER */
+.header{padding:52px 20px 24px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;background:radial-gradient(circle,rgba(200,240,60,.1) 0%,transparent 65%);pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'';width:20px;height:2px;background:var(--accent)}
+h1{font-size:26px;font-weight:800;line-height:1.15}
+h1 span{color:var(--accent)}
+.header-sub{font-size:12.5px;color:var(--muted2);margin-top:8px;line-height:1.55}
+
+/* SECTION + CARD */
+.sec{padding:0 14px;margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px}
+.card-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+
+/* INPUTS */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+.flabel{font-size:11px;color:var(--muted2);font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+
+/* Tooltip */
+.tip-wrap{position:relative;display:inline-flex}
+.ibtn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);color:var(--muted2);font-size:9px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:var(--mono);transition:all .2s;-webkit-tap-highlight-color:transparent;user-select:none}
+.ibtn.on{background:var(--accent);color:#0c0e14;border-color:var(--accent)}
+.tipbox{display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);border-radius:11px;padding:11px 13px;font-size:11.5px;color:var(--text);line-height:1.65;width:230px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;font-family:var(--font);font-weight:400;text-transform:none;letter-spacing:0}
+.tipbox::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border2)}
+.tipbox.r{left:auto;right:0;transform:none}.tipbox.r::after{left:auto;right:12px;transform:none}
+.ibtn.on+.tipbox{display:block}
+
+.iwrap{position:relative;display:flex;align-items:center}
+.ipfx{position:absolute;left:12px;font-size:13px;color:var(--muted);font-family:var(--mono);pointer-events:none;z-index:1}
+.isfx{position:absolute;right:12px;font-size:11px;color:var(--muted);font-family:var(--mono);pointer-events:none}
+input[type="number"],input[type="date"],select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:var(--mono);font-size:15px;font-weight:500;padding:13px 12px;outline:none;appearance:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
+input[type="date"]{font-size:13px;color-scheme:dark}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,240,60,.1)}
+input.pfx{padding-left:28px}
+input.sfx{padding-right:52px}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+
+/* Required star */
+.req{color:var(--danger);margin-left:2px}
+
+/* CDI pill */
+.pill{display:flex;align-items:center;gap:8px;background:rgba(60,240,160,.07);border:1px solid rgba(60,240,160,.18);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--accent2);font-family:var(--mono)}
+.pill .dot{width:6px;height:6px;background:var(--accent2);border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Date preview */
+.date-preview{margin-top:10px;background:var(--surface2);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--muted2);line-height:1.7}
+.date-preview strong{color:var(--accent2)}
+.date-preview .warn-txt{color:var(--warn)}
+
+/* IR table */
+.irt{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono)}
+.irt th{color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:.06em}
+.irt td{padding:9px 8px;color:var(--text);border-bottom:1px solid var(--border)}
+.irt tr:last-child td{border-bottom:none}
+.irbadge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.ir22{background:rgba(240,92,92,.15);color:#f08080}
+.ir20{background:rgba(240,180,60,.15);color:#f0c060}
+.ir17{background:rgba(200,240,60,.15);color:#b8e040}
+.ir15{background:rgba(60,240,160,.15);color:var(--accent2)}
+
+/* BTN */
+.btn-calc{margin:14px 14px 0;width:calc(100% - 28px);background:var(--accent);color:#0c0e14;border:none;border-radius:14px;padding:17px;font-family:var(--font);font-size:15px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 28px rgba(200,240,60,.22)}
+.btn-calc:active{transform:scale(.97);box-shadow:none}
+
+/* RESULTADO */
+.resultado{display:none}
+.resultado.visible{display:block}
+
+/* Winner banner */
+.wbanner{margin:14px 14px 0;border-radius:var(--radius);padding:22px 20px;position:relative;overflow:hidden}
+.wbanner.avista{background:linear-gradient(135deg,#161f05,#1c2808);border:1px solid rgba(200,240,60,.3)}
+.wbanner.parcelado{background:linear-gradient(135deg,#051a10,#072015);border:1px solid rgba(60,240,160,.3)}
+.wglow{position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;pointer-events:none}
+.avista .wglow{background:radial-gradient(circle,rgba(200,240,60,.2) 0%,transparent 70%)}
+.parcelado .wglow{background:radial-gradient(circle,rgba(60,240,160,.2) 0%,transparent 70%)}
+.wtag{font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;padding:4px 9px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.avista .wtag{background:rgba(200,240,60,.15);color:var(--accent)}
+.parcelado .wtag{background:rgba(60,240,160,.15);color:var(--accent2)}
+.wtitle{font-size:24px;font-weight:800;margin-bottom:3px}
+.wsub{font-size:12px;color:var(--muted2);margin-bottom:16px}
+.wamt{font-family:var(--mono);font-size:34px;font-weight:500;letter-spacing:-.02em}
+.avista .wamt{color:var(--accent)}.parcelado .wamt{color:var(--accent2)}
+.wamt-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* Compare grid */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px 0}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 13px}
+.cc.bav{border-color:rgba(200,240,60,.5)}.cc.bpar{border-color:rgba(60,240,160,.5)}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:13px}
+.crow{margin-bottom:10px}.crow:last-child{margin-bottom:0}
+.clbl{font-size:10px;color:var(--muted);margin-bottom:2px}
+.cval{font-family:var(--mono);font-size:13px;font-weight:500}
+.cdiv{height:1px;background:var(--border);margin:10px 0}
+.cy{color:var(--accent)}.cg{color:var(--accent2)}.cr{color:var(--danger)}.cm{color:var(--muted2)}
+
+/* Detail card */
+.dcard{margin:10px 14px 0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px}
+.dtitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.drow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.drow:last-child{border-bottom:none}
+.dlbl{color:var(--muted2)}.dval{font-family:var(--mono);font-weight:500}
+
+/* Break-even */
+.becard{margin:10px 14px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.betitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.betext{font-size:13px;color:var(--text);line-height:1.65}
+.betext strong{color:var(--danger);font-family:var(--mono)}
+
+/* Notes */
+.note{margin:10px 14px 0;border-radius:12px;padding:12px 14px;font-size:11.5px;line-height:1.65}
+.note.warn{background:rgba(240,180,60,.06);border:1px solid rgba(240,180,60,.2);color:var(--muted2)}
+.note.warn strong{color:var(--warn)}
+.note.info{background:rgba(96,144,240,.06);border:1px solid rgba(96,144,240,.2);color:var(--muted2)}
+.note.info strong{color:var(--info)}
+
+/* ── MÊS A MÊS ── */
+.toggle-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 14px 0;width:calc(100% - 28px);background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:14px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s}
+.toggle-btn:hover{border-color:var(--accent)}
+.toggle-btn .chev{font-size:10px;transition:transform .3s;display:inline-block}
+.toggle-btn.open .chev{transform:rotate(180deg)}
+
+.sim-wrap{display:none;margin:0 14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.sim-wrap.visible{display:block}
+
+.sim-header{padding:14px 16px 0}
+.sim-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px}
+.sim-sub{font-size:11px;color:var(--muted2);margin-bottom:12px}
+
+/* Tab switcher */
+.tabs{display:flex;gap:6px;padding:0 16px 12px}
+.tab{flex:1;padding:9px 6px;border:1px solid var(--border);border-radius:9px;font-family:var(--font);font-size:11px;font-weight:700;color:var(--muted2);background:var(--surface2);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all .2s}
+.tab.active-av{background:rgba(200,240,60,.12);border-color:rgba(200,240,60,.4);color:var(--accent)}
+.tab.active-par{background:rgba(60,240,160,.12);border-color:rgba(60,240,160,.4);color:var(--accent2)}
+
+/* Table scroll */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.simtable{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono);white-space:nowrap}
+.simtable th{background:var(--surface2);color:var(--muted);font-weight:600;padding:8px 10px;text-align:right;font-size:10px;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0}
+.simtable th:first-child{text-align:left}
+.simtable td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);color:var(--text)}
+.simtable td:first-child{text-align:left;color:var(--muted2)}
+.simtable tr:last-child td{border-bottom:none;font-weight:600}
+.simtable .rend-col{color:var(--muted2)}.simtable .ir-col{color:var(--danger)}.simtable .liq-col{color:var(--accent)}.simtable .liqg-col{color:var(--accent2)}.simtable .parc-col{color:var(--warn)}.simtable .saldo-col{color:var(--text)}
+.sim-total{background:var(--surface2);padding:12px 16px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted2);line-height:1.8}
+.sim-total strong{color:var(--text);font-family:var(--mono)}
+
+/* IOF warning in table */
+.iof-warn{font-size:9px;color:var(--warn);margin-left:3px}
+
+/* Footer */
+.footer{text-align:center;padding:32px 16px 0;font-size:10.5px;color:#3a3f52;line-height:1.8}
+select option{background:var(--surface2);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="eyebrow">Calculadora Financeira</div>
+    <h1>À vista ou<br/><span>parcelado?</span></h1>
+    <p class="header-sub">Compara o desconto à vista com o rendimento <strong>líquido após IR</strong>, usando as datas reais de pagamento.</p>
+  </div>
+
+  <!-- COMPRA -->
+  <div class="sec">
+    <div class="card">
+      <div class="card-title">Parâmetros da Compra</div>
+      <div class="grid">
+
+        <div class="field full">
+          <div class="flabel">
+            Valor da compra
+            <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+              <div class="tipbox">Valor original do produto, <strong>antes</strong> de qualquer desconto.</div>
+            </div>
+          </div>
+          <div class="iwrap">
+            <span class="ipfx">R$</span>
+            <input type="number" id="valor" class="pfx" value="4650.56" step="0.01" min="0" inputmode="decimal"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="flabel">
+            Desconto à vista
+            <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+              <div class="tipbox">Redução % caso pague tudo de uma vez. Retorno <strong>garantido e sem IR</strong>.</div>
+            </div>
+          </div>
+          <div class="iwrap">
+            <input type="number" id="desconto" class="sfx" value="10" step="0.5" min="0" max="100" inputmode="decimal"/>
+            <span class="isfx">%</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="flabel">Parcelas</div>
+          <select id="parcelas">
+            <option value="2">2x</option><option value="3">3x</option><option value="4">4x</option>
+            <option value="5">5x</option><option value="6">6x</option><option value="7">7x</option>
+            <option value="8">8x</option><option value="9">9x</option><option value="10">10x</option>
+            <option value="11">11x</option><option value="12" selected>12x</option>
+            <option value="13">13x</option><option value="14">14x</option><option value="15">15x</option>
+            <option value="16">16x</option><option value="17">17x</option><option value="18">18x</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- DATAS -->
+  <div class="sec">
+    <div class="card">
+      <div class="card-title">
+        Datas de Pagamento <span style="color:var(--danger);font-size:9px;letter-spacing:.1em"> ● OBRIGATÓRIO</span>
+        <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+          <div class="tipbox r">As datas permitem calcular exatamente quantos dias cada valor fica investido antes de ser sacado — o que afeta diretamente a alíquota de IR e o rendimento.</div>
+        </div>
+      </div>
+      <div class="grid">
+
+        <div class="field">
+          <div class="flabel">Data da compra<span class="req">*</span></div>
+          <input type="date" id="dtCompra" oninput="previewDatas()"/>
+        </div>
+
+        <div class="field">
+          <div class="flabel">
+            Dia do vencimento<span class="req">*</span>
+            <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+              <div class="tipbox r">Dia do mês em que você paga a fatura. Ex: se vence todo dia 1, coloque <strong>1</strong>.</div>
+            </div>
+          </div>
+          <div class="iwrap">
+            <input type="number" id="diaVenc" min="1" max="28" step="1" placeholder="1" inputmode="numeric" oninput="previewDatas()"/>
+          </div>
+        </div>
+
+        <div class="field full" id="datePreviewWrap" style="display:none">
+          <div class="date-preview" id="datePreview"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTIMENTO -->
+  <div class="sec">
+    <div class="card">
+      <div class="card-title">Parâmetros do Investimento</div>
+      <div class="grid">
+
+        <div class="field">
+          <div class="flabel">
+            SELIC (a.a.)
+            <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+              <div class="tipbox">Taxa básica de juros do Brasil. CDI é calculado como <strong>SELIC − 0,10%</strong>.</div>
+            </div>
+          </div>
+          <div class="iwrap">
+            <input type="number" id="selic" class="sfx" value="14.75" step="0.25" min="0" inputmode="decimal" oninput="updateCDI()"/>
+            <span class="isfx">%</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="flabel">
+            CDB rende
+            <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+              <div class="tipbox">Nubank/Mercado Pago: ~100–105% CDI. Inter: até 110%. Verifique no seu app.</div>
+            </div>
+          </div>
+          <div class="iwrap">
+            <input type="number" id="pctCDI" class="sfx" value="105" step="1" min="0" inputmode="decimal" oninput="updateCDI()"/>
+            <span class="isfx">% CDI</span>
+          </div>
+        </div>
+
+        <div class="field full">
+          <div class="pill">
+            <span class="dot"></span>
+            CDI: <strong id="cdiDisplay">14.65%</strong> a.a. &nbsp;·&nbsp; Diária: <strong id="cdiDiariaDisplay">0.03764%</strong>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA IR -->
+  <div class="sec">
+    <div class="card">
+      <div class="card-title">
+        Tabela IR — Renda Fixa
+        <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+          <div class="tipbox r">IR incide <strong>só sobre o lucro</strong>. Nubank, Mercado Pago e Inter aplicam esta tabela automaticamente no saque.</div>
+        </div>
+      </div>
+      <table class="irt">
+        <thead><tr><th>Prazo desde a aplicação</th><th>Alíquota</th></tr></thead>
+        <tbody>
+          <tr><td>Até 180 dias</td><td><span class="irbadge ir22">22,5%</span></td></tr>
+          <tr><td>181 a 360 dias</td><td><span class="irbadge ir20">20,0%</span></td></tr>
+          <tr><td>361 a 720 dias</td><td><span class="irbadge ir17">17,5%</span></td></tr>
+          <tr><td>Acima de 720 dias</td><td><span class="irbadge ir15">15,0%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calcular()">Calcular →</button>
+
+  <!-- ══ RESULTADO ══ -->
+  <div class="resultado" id="resultado">
+
+    <div class="wbanner" id="wbanner">
+      <div class="wglow"></div>
+      <div class="wtag" id="wtag"></div>
+      <div class="wtitle" id="wtitle"></div>
+      <div class="wsub" id="wsub"></div>
+      <div class="wamt" id="wamt"></div>
+      <div class="wamt-lbl">vantagem líquida (já descontado IR)</div>
+    </div>
+
+    <div class="cgrid">
+      <div class="cc" id="ccAV">
+        <div class="ctitle">💵 À Vista</div>
+        <div class="crow"><div class="clbl">Você paga</div><div class="cval" id="av_paga"></div></div>
+        <div class="crow"><div class="clbl">Desconto obtido</div><div class="cval cy" id="av_desc"></div></div>
+        <div class="cdiv"></div>
+        <div class="crow"><div class="clbl">Rendimento bruto</div><div class="cval cm" id="av_bruto"></div></div>
+        <div class="crow"><div class="clbl">IR cobrado</div><div class="cval cr" id="av_ir"></div></div>
+        <div class="crow"><div class="clbl">Rendimento líquido</div><div class="cval cy" id="av_liq"></div></div>
+        <div class="cdiv"></div>
+        <div class="crow"><div class="clbl">Saldo final</div><div class="cval cy" id="av_saldo" style="font-size:14px"></div></div>
+      </div>
+
+      <div class="cc" id="ccPAR">
+        <div class="ctitle">📅 Parcelado</div>
+        <div class="crow"><div class="clbl">Parcela mensal</div><div class="cval" id="par_parcela"></div></div>
+        <div class="crow"><div class="clbl">Total pago</div><div class="cval cm" id="par_total"></div></div>
+        <div class="cdiv"></div>
+        <div class="crow"><div class="clbl">Rendimento bruto</div><div class="cval cm" id="par_bruto"></div></div>
+        <div class="crow"><div class="clbl">IR cobrado</div><div class="cval cr" id="par_ir"></div></div>
+        <div class="crow"><div class="clbl">Rendimento líquido</div><div class="cval cg" id="par_liq"></div></div>
+        <div class="cdiv"></div>
+        <div class="crow"><div class="clbl">Saldo restante</div><div class="cval cg" id="par_saldo" style="font-size:14px"></div></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dtitle">
+        🔢 Detalhes
+        <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+          <div class="tipbox r">À vista: investe o desconto até a última parcela. Parcelado: investe o valor cheio e saca mês a mês. IR baseado nos dias reais entre compra e cada saque.</div>
+        </div>
+      </div>
+      <div class="drow"><span class="dlbl">Data da compra</span><span class="dval" id="det_dtcompra"></span></div>
+      <div class="drow"><span class="dlbl">1ª parcela</span><span class="dval" id="det_dt1"></span></div>
+      <div class="drow"><span class="dlbl">Última parcela</span><span class="dval" id="det_dtN"></span></div>
+      <div class="drow"><span class="dlbl">CDI efetivo (a.a.)</span><span class="dval" id="det_cdi"></span></div>
+      <div class="drow"><span class="dlbl">Taxa diária efetiva</span><span class="dval" id="det_diaria"></span></div>
+      <div class="drow"><span class="dlbl">IR aplicado (à vista)</span><span class="dval" id="det_ir_av"></span></div>
+      <div class="drow"><span class="dlbl">IR médio (parcelado)</span><span class="dval" id="det_ir_par"></span></div>
+    </div>
+
+    <div class="becard">
+      <div class="betitle">
+        📊 Ponto de Equilíbrio
+        <div class="tip-wrap"><span class="ibtn" onclick="tip(this)">i</span>
+          <div class="tipbox">SELIC mínima para a opção perdedora empatar — já com IR calculado sobre os dias reais.</div>
+        </div>
+      </div>
+      <div class="betext" id="betext"></div>
+    </div>
+
+    <div class="note warn">⚠️ <strong>IOF:</strong> saques em menos de 30 dias têm IOF regressivo (até 96% do rendimento). Parcelas pagas antes de 30 dias da compra estão sinalizadas na simulação.</div>
+    <div class="note info" style="margin-bottom:0">
+      <strong>ℹ️ Liquidez diária:</strong> Nubank, Mercado Pago e Inter retêm IR automaticamente no saque. Após 30 dias, IOF é zero.
+    </div>
+
+    <!-- ── TOGGLE MÊS A MÊS ── -->
+    <button class="toggle-btn" id="toggleSim" onclick="toggleSimulacao()">
+      <span>📋 Ver simulação mês a mês</span>
+      <span class="chev">▲</span>
+    </button>
+
+    <div class="sim-wrap" id="simWrap">
+      <div class="sim-header">
+        <div class="sim-title">Simulação Detalhada</div>
+        <div class="sim-sub" id="simSubTitle"></div>
+      </div>
+      <div class="tabs">
+        <div class="tab" id="tabAV" onclick="switchTab('av')">💵 À Vista</div>
+        <div class="tab" id="tabPAR" onclick="switchTab('par')">📅 Parcelado</div>
+      </div>
+      <div class="tscroll">
+        <table class="simtable" id="simTableAV"></table>
+        <table class="simtable" id="simTablePAR" style="display:none"></table>
+      </div>
+      <div class="sim-total" id="simTotal"></div>
+    </div>
+
+  </div><!-- /resultado -->
+
+  <div class="footer">
+    CDI ≈ SELIC − 0,10% · Fonte: Banco Central do Brasil<br/>
+    Consulte a SELIC em bcb.gov.br · Cálculo com dias corridos reais<br/>
+    Este app não substitui consultoria financeira.
+  </div>
+
+</div>
+
+<script>
+// ══ Helpers ══════════════════════════════════════
+const fmt    = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtD   = d => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const fmtS   = v => v.toFixed(4)+'%';
+
+function irRate(days){
+  if(days<=180) return 0.225;
+  if(days<=360) return 0.200;
+  if(days<=720) return 0.175;
+  return 0.150;
+}
+function irPct(days){
+  return (irRate(days)*100).toFixed(1)+'%';
+}
+
+// ══ CDI live ═════════════════════════════════════
+function updateCDI(){
+  const s  = parseFloat(document.getElementById('selic').value)||0;
+  const p  = parseFloat(document.getElementById('pctCDI').value)||100;
+  const cdi= Math.max(0,s-0.1);
+  const ef = cdi*p/100;
+  const dr = (Math.pow(1+ef/100,1/365)-1)*100;
+  document.getElementById('cdiDisplay').textContent     = cdi.toFixed(2)+'%';
+  document.getElementById('cdiDiariaDisplay').textContent= dr.toFixed(5)+'%';
+}
+updateCDI();
+
+// ══ Date helpers ══════════════════════════════════
+function parseDateInput(str){
+  if(!str) return null;
+  const[y,m,d]=str.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+
+// Next due date on or after ref, for given day of month
+function nextDue(ref,dia){
+  const y=ref.getFullYear(), m=ref.getMonth(), d=ref.getDate();
+  if(d < dia){
+    // same month — but clamp to last day of month
+    const last=new Date(y,m+1,0).getDate();
+    return new Date(y,m,Math.min(dia,last));
+  } else {
+    const last=new Date(y,m+2,0).getDate();
+    return new Date(y,m+1,Math.min(dia,last));
+  }
+}
+
+// Build array of N payment dates
+function buildPayments(compra,dia,N){
+  const dates=[];
+  let cur=new Date(compra);
+  const d1=nextDue(cur,dia);
+  dates.push(d1);
+  for(let i=1;i<N;i++){
+    const prev=dates[dates.length-1];
+    const pm=prev.getMonth(), py=prev.getFullYear();
+    const last=new Date(py,pm+2,0).getDate();
+    dates.push(new Date(py,pm+1,Math.min(dia,last)));
+  }
+  return dates;
+}
+
+function diffDays(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
+
+// ══ Preview datas ═════════════════════════════════
+function previewDatas(){
+  const dtStr=document.getElementById('dtCompra').value;
+  const dia=parseInt(document.getElementById('diaVenc').value);
+  const N=parseInt(document.getElementById('parcelas').value);
+  const wrap=document.getElementById('datePreviewWrap');
+  const prev=document.getElementById('datePreview');
+
+  if(!dtStr||!dia||dia<1||dia>28){ wrap.style.display='none'; return; }
+
+  const compra=parseDateInput(dtStr);
+  const payments=buildPayments(compra,dia,N);
+  const d1=payments[0], dN=payments[N-1];
+  const dias1=diffDays(compra,d1), diasN=diffDays(compra,dN);
+  const iofWarn=dias1<30;
+
+  wrap.style.display='block';
+  prev.innerHTML=
+    `<strong>1ª parcela:</strong> ${fmtD(d1)} — <strong>${dias1} dias</strong> após a compra${iofWarn?` <span class="warn-txt">⚠️ IOF (< 30 dias)</span>`:''}<br>`+
+    `<strong>Última (${N}ª):</strong> ${fmtD(dN)} — <strong>${diasN} dias</strong> após a compra<br>`+
+    `<strong>Período total investido:</strong> ${diasN} dias`;
+}
+
+document.getElementById('parcelas').addEventListener('change', previewDatas);
+
+// ══ Tooltip ═══════════════════════════════════════
+function tip(btn){
+  document.querySelectorAll('.ibtn').forEach(b=>{ if(b!==btn) b.classList.remove('on'); });
+  btn.classList.toggle('on');
+}
+document.addEventListener('click',e=>{ if(!e.target.classList.contains('ibtn')) document.querySelectorAll('.ibtn').forEach(b=>b.classList.remove('on')); });
+
+// ══ Calc: À Vista ════════════════════════════════
+// Invests "eco" from compra until last payment date
+function calcAV(eco,dr,totalDias){
+  const bruto=eco*(Math.pow(1+dr,totalDias)-1);
+  const aliq=irRate(totalDias);
+  const ir=bruto*aliq;
+  const liq=bruto-ir;
+  const saldo=eco+liq;
+  return {bruto,ir,liq,saldo,aliq,totalDias};
+}
+
+// ══ Calc: Parcelado ═══════════════════════════════
+// Invests "valor", withdraws "parcela" at each payment date
+// IR per withdrawal based on actual days from start
+function calcPAR(valor,parcela,dr,payments,compra){
+  let saldo=valor;
+  let totBruto=0, totIR=0;
+  const rows=[];
+  let prevDate=compra;
+
+  payments.forEach((pd,i)=>{
+    const diasTotal=diffDays(compra,pd);
+    const diasPeriodo=diffDays(prevDate,pd);
+    const rendBruto=saldo*(Math.pow(1+dr,diasPeriodo)-1);
+    const aliq=irRate(diasTotal);
+    const ir=rendBruto*aliq;
+    const rendLiq=rendBruto-ir;
+    totBruto+=rendBruto;
+    totIR+=ir;
+    const saldoAntes=saldo;
+    saldo=saldo+rendLiq-parcela;
+    if(saldo<0) saldo=0;
+    rows.push({m:i+1,date:pd,diasTotal,diasPeriodo,aliq,saldoAntes,rendBruto,ir,rendLiq,parcela,saldoDepois:saldo,iof:diasTotal<30});
+    prevDate=pd;
+  });
+
+  const aliqMedia=totBruto>0?totIR/totBruto:0;
+  return {saldo,totBruto,totIR,liq:totBruto-totIR,aliqMedia,rows};
+}
+
+// ══ Break-even ════════════════════════════════════
+function breakeven(eco,valor,parcela,payments,compra,pct){
+  const totalDias=diffDays(compra,payments[payments.length-1]);
+  let lo=0.01,hi=500;
+  for(let i=0;i<100;i++){
+    const mid=(lo+hi)/2;
+    const cdiM=Math.max(0,mid-0.1)*pct/100;
+    const drM=Math.pow(1+cdiM/100,1/365)-1;
+    const avM=calcAV(eco,drM,totalDias);
+    const parM=calcPAR(valor,parcela,drM,payments,compra);
+    if(avM.saldo-parM.saldo>0) lo=mid; else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+
+// ══ Build simulation table HTML ═══════════════════
+function buildAVTable(eco,dr,payments,compra){
+  const totalDias=diffDays(compra,payments[payments.length-1]);
+  const aliqFinal=irRate(totalDias);
+
+  let html=`<thead><tr>
+    <th>Mês</th><th>Vencimento</th><th>Dias</th><th>Alíq. IR</th>
+    <th>Saldo Inicial</th><th>Rend. Bruto</th><th>IR</th><th>Rend. Líq.</th><th>Saldo</th>
+  </tr></thead><tbody>`;
+
+  let saldo=eco, prevDate=compra, totBruto=0;
+
+  payments.forEach((pd,i)=>{
+    const isLast=(i===payments.length-1);
+    const diasTotal=diffDays(compra,pd);
+    const diasPer=diffDays(prevDate,pd);
+    const rendMes=saldo*(Math.pow(1+dr,diasPer)-1);
+    totBruto+=rendMes;
+    const saldoAntes=saldo;
+    saldo+=rendMes;
+    const irMes  = isLast?totBruto*aliqFinal:0;
+    const liqMes = isLast?totBruto-irMes:0;
+    const saldoShow=isLast?saldo-irMes:saldo;
+
+    html+=`<tr${isLast?' style="font-weight:600"':''}>
+      <td>${i+1}</td>
+      <td>${fmtD(pd)}</td>
+      <td>${diasTotal}</td>
+      <td>${irPct(diasTotal)}${!isLast?'<span style="color:var(--muted);font-size:9px"> †</span>':''}</td>
+      <td class="saldo-col">${fmt(saldoAntes)}</td>
+      <td class="rend-col">${fmt(rendMes)}</td>
+      <td class="ir-col">${isLast?'−'+fmt(irMes):'—'}</td>
+      <td class="liq-col">${isLast?fmt(liqMes):'—'}</td>
+      <td class="saldo-col">${fmt(saldoShow)}</td>
+    </tr>`;
+    prevDate=pd;
+  });
+
+  html+=`<tr><td colspan="9" style="font-size:10px;color:var(--muted);padding:8px 10px">† Alíquota de referência — IR aplicado somente no resgate final</td></tr>`;
+  html+=`</tbody>`;
+  return html;
+}
+
+function buildPARTable(rows){
+  let html=`<thead><tr>
+    <th>Mês</th><th>Vencimento</th><th>Dias</th><th>Alíq. IR</th>
+    <th>Saldo Inicial</th><th>Rend. Bruto</th><th>IR</th><th>Rend. Líq.</th>
+    <th>Parcela</th><th>Saldo Final</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach(r=>{
+    html+=`<tr>
+      <td>${r.m}${r.iof?'<span class="iof-warn">⚠️</span>':''}</td>
+      <td>${fmtD(r.date)}</td>
+      <td>${r.diasTotal}</td>
+      <td>${irPct(r.diasTotal)}</td>
+      <td class="saldo-col">${fmt(r.saldoAntes)}</td>
+      <td class="rend-col">${fmt(r.rendBruto)}</td>
+      <td class="ir-col">−${fmt(r.ir)}</td>
+      <td class="liqg-col">${fmt(r.rendLiq)}</td>
+      <td class="parc-col">−${fmt(r.parcela)}</td>
+      <td class="saldo-col">${fmt(r.saldoDepois)}</td>
+    </tr>`;
+  });
+  html+=`</tbody>`;
+  return html;
+}
+
+// ══ Toggle simulação ══════════════════════════════
+let simVisible=false;
+let activeTab='av';
+
+function toggleSimulacao(){
+  simVisible=!simVisible;
+  const btn=document.getElementById('toggleSim');
+  const wrap=document.getElementById('simWrap');
+  btn.classList.toggle('open',simVisible);
+  wrap.classList.toggle('visible',simVisible);
+  if(simVisible) setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+
+function switchTab(t){
+  activeTab=t;
+  document.getElementById('simTableAV').style.display  = t==='av'  ? '' : 'none';
+  document.getElementById('simTablePAR').style.display = t==='par' ? '' : 'none';
+  document.getElementById('tabAV').className  = 'tab'+(t==='av'  ? ' active-av'  : '');
+  document.getElementById('tabPAR').className = 'tab'+(t==='par' ? ' active-par' : '');
+}
+
+// ══ CALCULAR ══════════════════════════════════════
+function calcular(){
+  const valor   = parseFloat(document.getElementById('valor').value)||0;
+  const desc    = parseFloat(document.getElementById('desconto').value)||0;
+  const N       = parseInt(document.getElementById('parcelas').value);
+  const selic   = parseFloat(document.getElementById('selic').value)||0;
+  const pct     = parseFloat(document.getElementById('pctCDI').value)||100;
+  const dtStr   = document.getElementById('dtCompra').value;
+  const diaV    = parseInt(document.getElementById('diaVenc').value);
+
+  if(valor<=0){ alert('Informe o valor da compra.'); return; }
+  if(!dtStr){ alert('Informe a data da compra.'); return; }
+  if(!diaV||diaV<1||diaV>28){ alert('Informe o dia de vencimento (1 a 28).'); return; }
+
+  const compra  = parseDateInput(dtStr);
+  const cdi     = Math.max(0,selic-0.1);
+  const cdiEf   = cdi*pct/100;
+  const dr      = Math.pow(1+cdiEf/100,1/365)-1;
+  const eco     = valor*desc/100;
+  const avista  = valor-eco;
+  const parcela = valor/N;
+
+  const payments = buildPayments(compra,diaV,N);
+  const totalDias= diffDays(compra,payments[N-1]);
+
+  const av  = calcAV(eco,dr,totalDias);
+  const par = calcPAR(valor,parcela,dr,payments,compra);
+  const vant= av.saldo-par.saldo;
+  const melhor= vant>=0?'avista':'parcelado';
+
+  const be=breakeven(eco,valor,parcela,payments,compra,pct);
+
+  // ── Winner banner ──
+  const wb=document.getElementById('wbanner');
+  wb.className='wbanner '+melhor;
+  document.getElementById('wtag').textContent  ='✅ Melhor opção';
+  document.getElementById('wtitle').textContent= melhor==='avista'?'Pague à vista':'Parcele';
+  document.getElementById('wsub').textContent  = melhor==='avista'
+    ?'O desconto supera o rendimento líquido do CDB'
+    :'O rendimento líquido supera o desconto à vista';
+  document.getElementById('wamt').textContent  = fmt(Math.abs(vant));
+
+  document.getElementById('ccAV').className  = 'cc'+(melhor==='avista'    ?' bav':'');
+  document.getElementById('ccPAR').className = 'cc'+(melhor==='parcelado' ?' bpar':'');
+
+  // À vista
+  document.getElementById('av_paga').textContent  = fmt(avista);
+  document.getElementById('av_desc').textContent  = fmt(eco);
+  document.getElementById('av_bruto').textContent = fmt(av.bruto);
+  document.getElementById('av_ir').textContent    = '− '+fmt(av.ir);
+  document.getElementById('av_liq').textContent   = fmt(av.liq);
+  document.getElementById('av_saldo').textContent = fmt(av.saldo);
+
+  // Parcelado
+  document.getElementById('par_parcela').textContent = fmt(parcela)+'/mês';
+  document.getElementById('par_total').textContent   = fmt(valor);
+  document.getElementById('par_bruto').textContent   = fmt(par.totBruto);
+  document.getElementById('par_ir').textContent      = '− '+fmt(par.totIR);
+  document.getElementById('par_liq').textContent     = fmt(par.liq);
+  document.getElementById('par_saldo').textContent   = fmt(Math.max(0,par.saldo));
+
+  // Detalhes
+  document.getElementById('det_dtcompra').textContent = fmtD(compra);
+  document.getElementById('det_dt1').textContent      = fmtD(payments[0])+' ('+diffDays(compra,payments[0])+' dias)';
+  document.getElementById('det_dtN').textContent      = fmtD(payments[N-1])+' ('+totalDias+' dias)';
+  document.getElementById('det_cdi').textContent      = cdiEf.toFixed(2)+'%';
+  document.getElementById('det_diaria').textContent   = (dr*100).toFixed(5)+'%';
+  document.getElementById('det_ir_av').textContent    = irPct(totalDias)+' ('+totalDias+' dias)';
+  document.getElementById('det_ir_par').textContent   = (par.aliqMedia*100).toFixed(1)+'% ponderado';
+
+  // Break-even
+  document.getElementById('betext').innerHTML = melhor==='avista'
+    ?`Parcelar superaria à vista apenas se a SELIC estivesse acima de <strong>${be.toFixed(1)}% ao ano</strong> (líquido de IR). Com SELIC a ${selic}%, pagar à vista vence.`
+    :`À vista superaria parcelar apenas se a SELIC estivesse abaixo de <strong>${be.toFixed(1)}% ao ano</strong> (líquido de IR). Com SELIC a ${selic}%, parcelar vence.`;
+
+  // Simulação tabelas
+  document.getElementById('simTableAV').innerHTML  = buildAVTable(eco,dr,payments,compra);
+  document.getElementById('simTablePAR').innerHTML = buildPARTable(par.rows);
+  document.getElementById('simSubTitle').textContent = `Compra em ${fmtD(compra)} · vence todo dia ${diaV} · ${N} parcelas de ${fmt(parcela)}`;
+
+  // Totals
+  const iofRows=par.rows.filter(r=>r.iof).length;
+  document.getElementById('simTotal').innerHTML=
+    `<strong>À vista:</strong> rend. bruto ${fmt(av.bruto)} − IR ${fmt(av.ir)} = <strong>${fmt(av.liq)}</strong> líquido &nbsp;`+
+    (iofRows>0?`<br><span style="color:var(--warn)">⚠️ ${iofRows} parcela(s) com IOF (< 30 dias da compra) — não incluído no cálculo</span>`:'');
+
+  // Reset tab
+  switchTab('av');
+
+  const res=document.getElementById('resultado');
+  res.classList.add('visible');
+
+  // Close sim if was open
+  if(simVisible){ simVisible=false; document.getElementById('toggleSim').classList.remove('open'); document.getElementById('simWrap').classList.remove('visible'); }
+
+  setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+</script>
+</body>
+</html>
